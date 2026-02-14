@@ -1,0 +1,621 @@
+<!-- ==========================================================
+   EP POPUP GENERATOR (Government-Briefing Style) — FIXED
+   - Rich text fields (contenteditable)
+   - Generates full embed code (button + popup)
+   - Button is centred in generated snippet
+   - Critical fix: generated </script> is escaped as <\/script>
+========================================================== -->
+
+<style>
+  :root{
+    --ep-navy:#1f2f4a;
+    --ep-border:#d8dde6;
+    --ep-light:#f7f9fc;
+    --ep-text:#1c2430;
+    --ep-muted:#5f6b7a;
+  }
+
+  .ep-gen-wrap{
+    max-width: 1050px;
+    margin: 18px auto;
+    padding: 18px;
+    border: 1px solid var(--ep-border);
+    border-radius: 10px;
+    background: #fff;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    color: var(--ep-text);
+  }
+  .ep-gen-head{
+    display:flex;
+    gap: 12px;
+    align-items:flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .ep-gen-title{
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--ep-navy);
+    letter-spacing: .2px;
+  }
+  .ep-gen-sub{
+    margin: 6px 0 0;
+    color: var(--ep-muted);
+    line-height: 1.6;
+    font-size: 14px;
+    max-width: 85ch;
+  }
+
+  .ep-inline{
+    display:flex;
+    gap: 10px;
+    align-items:center;
+    flex-wrap: wrap;
+  }
+  .ep-inline label{
+    font-size: 13px;
+    color: var(--ep-muted);
+    display:flex;
+    gap: 8px;
+    align-items:center;
+  }
+  .ep-inline input{
+    padding: 10px 12px;
+    border: 1px solid var(--ep-border);
+    border-radius: 8px;
+    min-width: 260px;
+    font-size: 14px;
+  }
+
+  .ep-gen-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 14px;
+  }
+  @media (max-width: 900px){
+    .ep-gen-grid{ grid-template-columns: 1fr; }
+  }
+
+  .ep-field{
+    border: 1px solid var(--ep-border);
+    border-radius: 10px;
+    overflow:hidden;
+    background: #fff;
+  }
+  .ep-field-h{
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--ep-border);
+    background: var(--ep-light);
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .ep-field-h b{
+    font-size: 12px;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--ep-navy);
+  }
+  .ep-mini{
+    font-size: 12px;
+    color: var(--ep-muted);
+  }
+  .ep-edit{
+    padding: 12px;
+    min-height: 90px;
+    outline: none;
+    line-height: 1.65;
+    color: var(--ep-text);
+  }
+  .ep-edit:empty:before{
+    content: attr(data-placeholder);
+    color: #8a93a3;
+  }
+
+  .ep-controls{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .ep-btn{
+    background: white;
+    color: var(--ep-navy);
+    border: 1.5px solid var(--ep-navy);
+    padding: 12px 18px;
+    font-weight: 800;
+    font-size: 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all .18s ease;
+  }
+  .ep-btn:hover{
+    background: var(--ep-navy);
+    color: white;
+  }
+  .ep-btn.secondary{
+    border-color: var(--ep-border);
+    color: var(--ep-text);
+    font-weight: 700;
+  }
+  .ep-btn.secondary:hover{
+    background: #f1f3f7;
+    color: var(--ep-text);
+    border-color: #cbd2df;
+  }
+
+  .ep-out{
+    margin-top: 14px;
+    border: 1px solid var(--ep-border);
+    border-radius: 10px;
+    overflow:hidden;
+  }
+  .ep-out-h{
+    padding: 10px 12px;
+    background: var(--ep-light);
+    border-bottom: 1px solid var(--ep-border);
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ep-out-h b{
+    font-size: 12px;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--ep-navy);
+  }
+  textarea.ep-code{
+    width: 100%;
+    min-height: 280px;
+    border: 0;
+    padding: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 12.5px;
+    line-height: 1.55;
+    resize: vertical;
+    outline: none;
+  }
+</style>
+
+<div class="ep-gen-wrap" id="epGen">
+  <div class="ep-gen-head">
+    <div>
+      <h3 class="ep-gen-title">Popup Generator (Government Briefing Style)</h3>
+      <p class="ep-gen-sub">
+        Edit the rich text blocks (bold, links, lists). Click <b>Generate Popup Code</b>.
+        The output is a complete embed snippet (centred button + popup).
+      </p>
+    </div>
+
+    <div class="ep-inline">
+      <label>Button label
+        <input id="epBtnLabel" value="View Programme Brief" />
+      </label>
+      <label>CTA (mailto / URL)
+        <input id="epCtaHref" value="mailto:admissions@europolytech.academy?subject=CPD%20Enquiry" />
+      </label>
+      <label>CTA text
+        <input id="epCtaText" value="Request Information" />
+      </label>
+    </div>
+  </div>
+
+  <div class="ep-gen-grid">
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Title</b><span class="ep-mini">Rich text allowed</span></div>
+      <div class="ep-edit" id="fTitle" contenteditable="true"
+           data-placeholder="e.g. Sovereign Intelligence: Governance &amp; Ethical Frameworks in AI">
+        Sovereign Intelligence: Governance &amp; Ethical Frameworks in AI
+      </div>
+    </div>
+
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Subtitle</b><span class="ep-mini">Rich text allowed</span></div>
+      <div class="ep-edit" id="fSub" contenteditable="true"
+           data-placeholder="1–2 lines describing the programme">
+        Executive CPD programme for senior decision-makers governing AI as an instrument of sovereignty, institutional legitimacy, and strategic autonomy.
+      </div>
+    </div>
+
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Programme overview</b><span class="ep-mini">Rich text allowed</span></div>
+      <div class="ep-edit" id="fOverview" contenteditable="true"
+           data-placeholder="Short paragraph">
+        Artificial Intelligence now operates as a domain of national power. This programme examines governance architecture, regulatory authority,
+        procurement strategy, and ethical enforceability within sovereign AI ecosystems. Participants explore comparative models and produce applied
+        oversight artefacts suitable for board and state-level contexts.
+      </div>
+    </div>
+
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Programme format meta</b><span class="ep-mini">Use &lt;br&gt; lines</span></div>
+      <div class="ep-edit" id="fMeta" contenteditable="true">
+        <strong>CPD Hours:</strong> 15 hours<br>
+        <strong>Delivery:</strong> In-person or blended executive format<br>
+        <strong>Cohort Size:</strong> 12–20 participants (Roundtable: 8–12)<br>
+        <strong>Assessment:</strong> Applied governance framework and executive decision artefacts
+      </div>
+    </div>
+
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Learning objectives</b><span class="ep-mini">Use bullet list</span></div>
+      <div class="ep-edit" id="fObjectives" contenteditable="true">
+        <ul>
+          <li>Evaluate AI governance models through sovereignty frameworks.</li>
+          <li>Assess national AI strategies and regulatory leverage.</li>
+          <li>Identify procurement and strategic dependency risks.</li>
+          <li>Design enforceable AI oversight mechanisms.</li>
+          <li>Integrate ethics into operational governance structures.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Target participants</b><span class="ep-mini">Use bullet list</span></div>
+      <div class="ep-edit" id="fAudience" contenteditable="true">
+        <ul>
+          <li>Senior regulators and policy leaders</li>
+          <li>Government and ministerial advisers</li>
+          <li>SOE and sovereign fund executives</li>
+          <li>Board members overseeing AI deployment</li>
+          <li>Cyber and national security leadership</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Core themes</b><span class="ep-mini">Use bullet list</span></div>
+      <div class="ep-edit" id="fThemes" contenteditable="true">
+        <ul>
+          <li>Digital sovereignty &amp; data localisation</li>
+          <li>Comparative governance models (EU / UK / Gulf / China)</li>
+          <li>Regulatory power vs innovation ecosystems</li>
+          <li>AI procurement, strategic dependency, accountability</li>
+          <li>Crisis governance in AI failure events</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="ep-field">
+      <div class="ep-field-h"><b>Footer note</b><span class="ep-mini">Rich text allowed</span></div>
+      <div class="ep-edit" id="fFooter" contenteditable="true">
+        CPD Certificate issued upon completion.
+      </div>
+    </div>
+  </div>
+
+  <div class="ep-controls">
+    <button class="ep-btn" id="btnGenerate">Generate Popup Code</button>
+    <button class="ep-btn secondary" id="btnCopy">Copy Code</button>
+    <span style="color:var(--ep-muted); font-size:13px;">
+      If Zoho blocks scripts on some pages, use “HTML Snippet” inside a normal content section (not header/footer widgets).
+    </span>
+  </div>
+
+  <div class="ep-out">
+    <div class="ep-out-h">
+      <b>Generated embed code</b>
+      <span class="ep-mini">Paste into Zoho</span>
+    </div>
+    <textarea class="ep-code" id="outCode" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  const btnLabel = $("epBtnLabel");
+  const ctaHref  = $("epCtaHref");
+  const ctaText  = $("epCtaText");
+
+  const fTitle = $("fTitle");
+  const fSub = $("fSub");
+  const fOverview = $("fOverview");
+  const fMeta = $("fMeta");
+  const fObjectives = $("fObjectives");
+  const fAudience = $("fAudience");
+  const fThemes = $("fThemes");
+  const fFooter = $("fFooter");
+
+  const out = $("outCode");
+
+  // Basic safety: remove scripts + inline event handlers
+  function sanitise(html){
+    return (html || "")
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+      .replace(/\son\w+="[^"]*"/gi, "")
+      .replace(/\son\w+='[^']*'/gi, "");
+  }
+
+  // Escape template-literal breakers
+  function escTL(str){
+    return str.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
+  }
+
+  function uid(){
+    return Math.random().toString(36).slice(2, 8);
+  }
+
+  function build(payload){
+    // IMPORTANT: generated snippet uses <\/script> to avoid breaking THIS generator script
+    return `<!-- =========================
+   EP CPD POPUP (Government Briefing Style)
+   Generated snippet: button + popup
+========================= -->
+
+<style>
+  :root{
+    --ep-navy:#1f2f4a;
+    --ep-border:#d8dde6;
+    --ep-light:#f7f9fc;
+    --ep-text:#1c2430;
+    --ep-muted:#5f6b7a;
+  }
+
+  .ep-brief-center-${payload.uid}{
+    width:100%;
+    display:flex;
+    justify-content:center;
+  }
+
+  .ep-brief-btn-${payload.uid}{
+    background:#fff;
+    color:var(--ep-navy);
+    border:1.5px solid var(--ep-navy);
+    padding:14px 26px;
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:.3px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:all .18s ease;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+  .ep-brief-btn-${payload.uid}:hover{ background:var(--ep-navy); color:#fff; }
+
+  .ep-overlay-${payload.uid}{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.32);
+    display:none;
+    z-index:99999;
+    padding:42px 18px;
+  }
+  .ep-overlay-${payload.uid}.active{ display:block; }
+
+  .ep-modal-${payload.uid}{
+    max-width:980px;
+    margin:auto;
+    background:#fff;
+    border:1px solid var(--ep-border);
+    border-radius:10px;
+    box-shadow:0 30px 70px rgba(0,0,0,.15);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    color:var(--ep-text);
+    overflow:hidden;
+  }
+
+  .ep-header-${payload.uid}{
+    padding:26px 30px 18px;
+    border-bottom:1px solid var(--ep-border);
+  }
+  .ep-title-${payload.uid}{
+    font-size:20px;
+    font-weight:800;
+    margin:0;
+    color:var(--ep-navy);
+    letter-spacing:.2px;
+    line-height:1.35;
+  }
+  .ep-sub-${payload.uid}{
+    margin-top:8px;
+    font-size:15px;
+    color:var(--ep-muted);
+    line-height:1.65;
+  }
+
+  .ep-body-${payload.uid}{ padding:30px; }
+
+  .ep-section-${payload.uid}{ margin-bottom:26px; }
+  .ep-section-${payload.uid} h4{
+    font-size:12px;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    margin:0 0 12px;
+    color:var(--ep-navy);
+  }
+  .ep-copy-${payload.uid}{
+    line-height:1.75;
+    color:var(--ep-muted);
+    font-size:15px;
+  }
+
+  .ep-grid-${payload.uid}{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+  @media(max-width:850px){ .ep-grid-${payload.uid}{ grid-template-columns:1fr; } }
+
+  .ep-meta-${payload.uid}{
+    background:var(--ep-light);
+    padding:18px;
+    border-radius:8px;
+    border:1px solid var(--ep-border);
+    font-size:14px;
+    line-height:1.7;
+    color:var(--ep-text);
+  }
+
+  .ep-footer-${payload.uid}{
+    padding:18px 30px;
+    border-top:1px solid var(--ep-border);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+
+  .ep-cta-${payload.uid}{
+    background:var(--ep-navy);
+    color:#fff;
+    padding:12px 22px;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:800;
+    font-size:14px;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+  }
+
+  .ep-close-${payload.uid}{
+    background:none;
+    border:1px solid var(--ep-border);
+    width:40px; height:40px;
+    border-radius:10px;
+    cursor:pointer;
+    color:var(--ep-muted);
+    display:grid;
+    place-items:center;
+  }
+  .ep-close-${payload.uid}:hover{ background:var(--ep-light); }
+
+  .ep-modal-${payload.uid} ul{ margin:10px 0 0; padding-left:18px; }
+  .ep-modal-${payload.uid} li{ margin:6px 0; }
+  .ep-modal-${payload.uid} a{ color:var(--ep-navy); text-decoration:underline; text-underline-offset:3px; }
+</style>
+
+<div class="ep-brief-center-${payload.uid}">
+  <button type="button" class="ep-brief-btn-${payload.uid}" id="epOpen-${payload.uid}">
+    ${payload.buttonLabel}
+  </button>
+</div>
+
+<div class="ep-overlay-${payload.uid}" id="epOverlay-${payload.uid}" aria-hidden="true">
+  <div class="ep-modal-${payload.uid}" role="dialog" aria-modal="true" aria-labelledby="epTitle-${payload.uid}">
+    <div class="ep-header-${payload.uid}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+        <div>
+          <h3 class="ep-title-${payload.uid}" id="epTitle-${payload.uid}">${payload.title}</h3>
+          <div class="ep-sub-${payload.uid}">${payload.subtitle}</div>
+        </div>
+        <button type="button" class="ep-close-${payload.uid}" id="epClose-${payload.uid}" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="ep-body-${payload.uid}">
+      <div class="ep-section-${payload.uid}">
+        <h4>Programme Overview</h4>
+        <div class="ep-copy-${payload.uid}">${payload.overview}</div>
+      </div>
+
+      <div class="ep-grid-${payload.uid}">
+        <div class="ep-section-${payload.uid}">
+          <h4>Learning Objectives</h4>
+          <div class="ep-copy-${payload.uid}">${payload.objectives}</div>
+        </div>
+        <div class="ep-section-${payload.uid}">
+          <h4>Target Participants</h4>
+          <div class="ep-copy-${payload.uid}">${payload.audience}</div>
+        </div>
+      </div>
+
+      <div class="ep-section-${payload.uid}">
+        <h4>Core Themes</h4>
+        <div class="ep-copy-${payload.uid}">${payload.themes}</div>
+      </div>
+
+      <div class="ep-section-${payload.uid}">
+        <h4>Programme Format</h4>
+        <div class="ep-meta-${payload.uid}">${payload.meta}</div>
+      </div>
+    </div>
+
+    <div class="ep-footer-${payload.uid}">
+      <div style="color:var(--ep-muted); font-size:14px; line-height:1.55;">
+        ${payload.footerNote}
+      </div>
+      <a class="ep-cta-${payload.uid}" href="${payload.ctaHref}">
+        ${payload.ctaText} <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var openBtn = document.getElementById("epOpen-${payload.uid}");
+  var overlay = document.getElementById("epOverlay-${payload.uid}");
+  var closeBtn = document.getElementById("epClose-${payload.uid}");
+
+  function openModal(){
+    overlay.classList.add("active");
+    overlay.setAttribute("aria-hidden","false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal(){
+    overlay.classList.remove("active");
+    overlay.setAttribute("aria-hidden","true");
+    document.body.style.overflow = "";
+  }
+
+  openBtn.addEventListener("click", openModal);
+  closeBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", function(e){ if(overlay.classList.contains("active") && e.key === "Escape") closeModal(); });
+})();
+<\/script>`;
+  }
+
+  function generate(){
+    const id = uid();
+    const payload = {
+      uid: id,
+      buttonLabel: escTL(sanitise(btnLabel.value.trim() || "View Programme Brief")),
+      ctaHref: escTL(sanitise(ctaHref.value.trim() || "#")),
+      ctaText: escTL(sanitise(ctaText.value.trim() || "Request Information")),
+
+      title: escTL(sanitise(fTitle.innerHTML.trim())),
+      subtitle: escTL(sanitise(fSub.innerHTML.trim())),
+      overview: escTL(sanitise(fOverview.innerHTML.trim())),
+      meta: escTL(sanitise(fMeta.innerHTML.trim())),
+      objectives: escTL(sanitise(fObjectives.innerHTML.trim())),
+      audience: escTL(sanitise(fAudience.innerHTML.trim())),
+      themes: escTL(sanitise(fThemes.innerHTML.trim())),
+      footerNote: escTL(sanitise(fFooter.innerHTML.trim())),
+    };
+
+    out.value = build(payload);
+    out.focus();
+    out.select();
+  }
+
+  async function copy(){
+    if(!out.value.trim()) generate();
+    try{
+      await navigator.clipboard.writeText(out.value);
+    }catch(e){
+      out.focus(); out.select();
+      document.execCommand("copy");
+    }
+  }
+
+  $("btnGenerate").addEventListener("click", generate);
+  $("btnCopy").addEventListener("click", copy);
+
+  // initial output
+  generate();
+})();
+</script>
