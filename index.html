@@ -1,9 +1,9 @@
 <!-- ==========================================================
-   EP POPUP GENERATOR (Government-Briefing Style) — FIXED
+   EP POPUP GENERATOR (Government-Briefing Style) — UPDATED
    - Rich text fields (contenteditable)
-   - Generates full embed code (button + popup)
-   - Button is centred in generated snippet
-   - Critical fix: generated </script> is escaped as <\/script>
+   - Generates full embed code (centred button + popup)
+   - FIX: modal fits viewport + internal scrolling (no cut-off)
+   - FIX: generated </script> escaped as <\/script>
 ========================================================== -->
 
 <style>
@@ -172,7 +172,7 @@
   }
   textarea.ep-code{
     width: 100%;
-    min-height: 280px;
+    min-height: 300px;
     border: 0;
     padding: 12px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -189,7 +189,7 @@
       <h3 class="ep-gen-title">Popup Generator (Government Briefing Style)</h3>
       <p class="ep-gen-sub">
         Edit the rich text blocks (bold, links, lists). Click <b>Generate Popup Code</b>.
-        The output is a complete embed snippet (centred button + popup).
+        The output is a complete embed snippet (centred button + popup) with viewport-safe scrolling.
       </p>
     </div>
 
@@ -225,8 +225,7 @@
 
     <div class="ep-field">
       <div class="ep-field-h"><b>Programme overview</b><span class="ep-mini">Rich text allowed</span></div>
-      <div class="ep-edit" id="fOverview" contenteditable="true"
-           data-placeholder="Short paragraph">
+      <div class="ep-edit" id="fOverview" contenteditable="true">
         Artificial Intelligence now operates as a domain of national power. This programme examines governance architecture, regulatory authority,
         procurement strategy, and ethical enforceability within sovereign AI ecosystems. Participants explore comparative models and produce applied
         oversight artefacts suitable for board and state-level contexts.
@@ -294,7 +293,7 @@
     <button class="ep-btn" id="btnGenerate">Generate Popup Code</button>
     <button class="ep-btn secondary" id="btnCopy">Copy Code</button>
     <span style="color:var(--ep-muted); font-size:13px;">
-      If Zoho blocks scripts on some pages, use “HTML Snippet” inside a normal content section (not header/footer widgets).
+      Output includes viewport-safe scrolling so the popup never gets cut off.
     </span>
   </div>
 
@@ -326,28 +325,24 @@
 
   const out = $("outCode");
 
-  // Basic safety: remove scripts + inline event handlers
   function sanitise(html){
     return (html || "")
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
       .replace(/\son\w+="[^"]*"/gi, "")
       .replace(/\son\w+='[^']*'/gi, "");
   }
-
-  // Escape template-literal breakers
   function escTL(str){
     return str.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
   }
-
   function uid(){
     return Math.random().toString(36).slice(2, 8);
   }
 
   function build(payload){
-    // IMPORTANT: generated snippet uses <\/script> to avoid breaking THIS generator script
     return `<!-- =========================
    EP CPD POPUP (Government Briefing Style)
    Generated snippet: button + popup
+   Includes viewport-safe scrolling (no cut-off)
 ========================= -->
 
 <style>
@@ -380,15 +375,19 @@
   }
   .ep-brief-btn-${payload.uid}:hover{ background:var(--ep-navy); color:#fff; }
 
+  /* ✅ Overlay can scroll (safe) */
   .ep-overlay-${payload.uid}{
     position:fixed; inset:0;
     background:rgba(0,0,0,.32);
     display:none;
     z-index:99999;
     padding:42px 18px;
+    overflow:auto;
+    box-sizing:border-box;
   }
   .ep-overlay-${payload.uid}.active{ display:block; }
 
+  /* ✅ Modal fits viewport + internal layout supports scrolling */
   .ep-modal-${payload.uid}{
     max-width:980px;
     margin:auto;
@@ -399,6 +398,9 @@
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
     color:var(--ep-text);
     overflow:hidden;
+    max-height:calc(100vh - 84px);
+    display:flex;
+    flex-direction:column;
   }
 
   .ep-header-${payload.uid}{
@@ -420,7 +422,12 @@
     line-height:1.65;
   }
 
-  .ep-body-${payload.uid}{ padding:30px; }
+  /* ✅ Body scrolls if content taller than viewport */
+  .ep-body-${payload.uid}{
+    padding:30px;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+  }
 
   .ep-section-${payload.uid}{ margin-bottom:26px; }
   .ep-section-${payload.uid} h4{
