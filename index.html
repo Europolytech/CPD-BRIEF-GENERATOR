@@ -360,19 +360,23 @@
     justify-content:center;
   }
 
-  .ep-brief-btn-${payload.uid}{
-    background:#fff;
-    color:var(--ep-navy);
-    border:1.5px solid var(--ep-navy);
-    padding:14px 26px;
-    font-weight:800;
-    font-size:15px;
-    letter-spacing:.3px;
-    border-radius:8px;
-    cursor:pointer;
-    transition:all .18s ease;
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  }
+ .ep-brief-btn-XXXX{
+  background:#fff !important;
+  color:var(--ep-navy) !important;
+
+  /* ✅ block theme "gradient text" tricks */
+  -webkit-text-fill-color: var(--ep-navy) !important;
+  background-clip: border-box !important;
+  -webkit-background-clip: border-box !important;
+  text-shadow: none !important;
+
+  border:1.5px solid var(--ep-navy) !important;
+}
+.ep-brief-btn-XXXX:hover{
+  background:var(--ep-navy) !important;
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+}
   .ep-brief-btn-${payload.uid}:hover{ background:var(--ep-navy); color:#fff; }
 
   /* ✅ Overlay can scroll (safe) */
