@@ -474,18 +474,32 @@
     gap:12px;
   }
 
-  .ep-cta-${payload.uid}{
-    background:var(--ep-navy);
-    color:#fff;
-    padding:12px 22px;
-    border-radius:8px;
-    text-decoration:none;
-    font-weight:800;
-    font-size:14px;
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-  }
+  /* ✅ Hardened CTA (force white text on all themes) */
+.ep-cta-${payload.uid},
+.ep-cta-${payload.uid}:link,
+.ep-cta-${payload.uid}:visited,
+.ep-cta-${payload.uid}:hover,
+.ep-cta-${payload.uid}:active{
+  background:var(--ep-navy) !important;
+
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+
+  text-decoration:none !important;
+  text-shadow:none !important;
+
+  background-clip:border-box !important;
+  -webkit-background-clip:border-box !important;
+
+  padding:12px 22px !important;
+  border-radius:8px !important;
+  font-weight:800 !important;
+  font-size:14px !important;
+
+  display:inline-flex !important;
+  align-items:center !important;
+  gap:10px !important;
+}
 
   .ep-close-${payload.uid}{
     background:none;
