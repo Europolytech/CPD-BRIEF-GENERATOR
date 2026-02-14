@@ -1,9 +1,12 @@
 <!-- ==========================================================
-   EP POPUP GENERATOR (Government-Briefing Style) — UPDATED
+   EP POPUP GENERATOR (Government-Briefing Style) — STABLE
    - Rich text fields (contenteditable)
    - Generates full embed code (centred button + popup)
-   - FIX: modal fits viewport + internal scrolling (no cut-off)
-   - FIX: generated </script> escaped as <\/script>
+   - Viewport-safe scrolling (no cut-off)
+   - Button text hardened (Zoho gradient text overrides)
+   - CTA text hardened (always white)
+   - INLINE fallback styling (prevents "basic default button")
+   - Escaped </script> as <\/script>
 ========================================================== -->
 
 <style>
@@ -172,7 +175,7 @@
   }
   textarea.ep-code{
     width: 100%;
-    min-height: 300px;
+    min-height: 320px;
     border: 0;
     padding: 12px;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
@@ -183,13 +186,12 @@
   }
 </style>
 
-<div class="ep-gen-wrap" id="epGen">
+<div class="ep-gen-wrap">
   <div class="ep-gen-head">
     <div>
       <h3 class="ep-gen-title">Popup Generator (Government Briefing Style)</h3>
       <p class="ep-gen-sub">
-        Edit the rich text blocks (bold, links, lists). Click <b>Generate Popup Code</b>.
-        The output is a complete embed snippet (centred button + popup) with viewport-safe scrolling.
+        Generates a full snippet (centred button + popup) with scroll-safe layout and hardened colours for Zoho themes.
       </p>
     </div>
 
@@ -209,18 +211,12 @@
   <div class="ep-gen-grid">
     <div class="ep-field">
       <div class="ep-field-h"><b>Title</b><span class="ep-mini">Rich text allowed</span></div>
-      <div class="ep-edit" id="fTitle" contenteditable="true"
-           data-placeholder="e.g. Sovereign Intelligence: Governance &amp; Ethical Frameworks in AI">
-        Sovereign Intelligence: Governance &amp; Ethical Frameworks in AI
-      </div>
+      <div class="ep-edit" id="fTitle" contenteditable="true">Sovereign Intelligence: Governance &amp; Ethical Frameworks in AI</div>
     </div>
 
     <div class="ep-field">
       <div class="ep-field-h"><b>Subtitle</b><span class="ep-mini">Rich text allowed</span></div>
-      <div class="ep-edit" id="fSub" contenteditable="true"
-           data-placeholder="1–2 lines describing the programme">
-        Executive CPD programme for senior decision-makers governing AI as an instrument of sovereignty, institutional legitimacy, and strategic autonomy.
-      </div>
+      <div class="ep-edit" id="fSub" contenteditable="true">Executive CPD programme for senior decision-makers governing AI as an instrument of sovereignty, institutional legitimacy, and strategic autonomy.</div>
     </div>
 
     <div class="ep-field">
@@ -233,7 +229,7 @@
     </div>
 
     <div class="ep-field">
-      <div class="ep-field-h"><b>Programme format meta</b><span class="ep-mini">Use &lt;br&gt; lines</span></div>
+      <div class="ep-field-h"><b>Programme format meta</b><span class="ep-mini">Use &lt;br&gt;</span></div>
       <div class="ep-edit" id="fMeta" contenteditable="true">
         <strong>CPD Hours:</strong> 15 hours<br>
         <strong>Delivery:</strong> In-person or blended executive format<br>
@@ -283,18 +279,13 @@
 
     <div class="ep-field">
       <div class="ep-field-h"><b>Footer note</b><span class="ep-mini">Rich text allowed</span></div>
-      <div class="ep-edit" id="fFooter" contenteditable="true">
-        CPD Certificate issued upon completion.
-      </div>
+      <div class="ep-edit" id="fFooter" contenteditable="true">CPD Certificate issued upon completion.</div>
     </div>
   </div>
 
   <div class="ep-controls">
     <button class="ep-btn" id="btnGenerate">Generate Popup Code</button>
     <button class="ep-btn secondary" id="btnCopy">Copy Code</button>
-    <span style="color:var(--ep-muted); font-size:13px;">
-      Output includes viewport-safe scrolling so the popup never gets cut off.
-    </span>
   </div>
 
   <div class="ep-out">
@@ -334,15 +325,15 @@
   function escTL(str){
     return str.replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
   }
-  function uid(){
-    return Math.random().toString(36).slice(2, 8);
-  }
+  function uid(){ return Math.random().toString(36).slice(2, 8); }
 
-  function build(payload){
+  function build(p){
+    const inlineBtn = 'background:#fff;color:#1f2f4a;border:1.5px solid #1f2f4a;padding:14px 26px;font-weight:800;font-size:15px;letter-spacing:.3px;border-radius:8px;cursor:pointer;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;';
+    const inlineCta = 'background:#1f2f4a;color:#ffffff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:800;font-size:14px;display:inline-flex;align-items:center;gap:10px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;';
+
     return `<!-- =========================
    EP CPD POPUP (Government Briefing Style)
-   Generated snippet: button + popup
-   Includes viewport-safe scrolling (no cut-off)
+   Generated snippet: centred button + popup
 ========================= -->
 
 <style>
@@ -354,33 +345,35 @@
     --ep-muted:#5f6b7a;
   }
 
-  .ep-brief-center-${payload.uid}{
-    width:100%;
-    display:flex;
-    justify-content:center;
+  .ep-brief-center-${p.uid}{ width:100%; display:flex; justify-content:center; }
+
+  /* Button — hardened */
+  .ep-brief-btn-${p.uid}{
+    background:#fff !important;
+    color:var(--ep-navy) !important;
+    -webkit-text-fill-color: var(--ep-navy) !important;
+    background-clip:border-box !important;
+    -webkit-background-clip:border-box !important;
+    text-shadow:none !important;
+
+    border:1.5px solid var(--ep-navy) !important;
+    padding:14px 26px !important;
+    font-weight:800 !important;
+    font-size:15px !important;
+    letter-spacing:.3px !important;
+    border-radius:8px !important;
+    cursor:pointer !important;
+    transition:all .18s ease !important;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif !important;
+  }
+  .ep-brief-btn-${p.uid}:hover{
+    background:var(--ep-navy) !important;
+    color:#fff !important;
+    -webkit-text-fill-color:#fff !important;
   }
 
- .ep-brief-btn-XXXX{
-  background:#fff !important;
-  color:var(--ep-navy) !important;
-
-  /* ✅ block theme "gradient text" tricks */
-  -webkit-text-fill-color: var(--ep-navy) !important;
-  background-clip: border-box !important;
-  -webkit-background-clip: border-box !important;
-  text-shadow: none !important;
-
-  border:1.5px solid var(--ep-navy) !important;
-}
-.ep-brief-btn-XXXX:hover{
-  background:var(--ep-navy) !important;
-  color:#fff !important;
-  -webkit-text-fill-color:#fff !important;
-}
-  .ep-brief-btn-${payload.uid}:hover{ background:var(--ep-navy); color:#fff; }
-
-  /* ✅ Overlay can scroll (safe) */
-  .ep-overlay-${payload.uid}{
+  /* Overlay + viewport-safe scrolling */
+  .ep-overlay-${p.uid}{
     position:fixed; inset:0;
     background:rgba(0,0,0,.32);
     display:none;
@@ -389,10 +382,9 @@
     overflow:auto;
     box-sizing:border-box;
   }
-  .ep-overlay-${payload.uid}.active{ display:block; }
+  .ep-overlay-${p.uid}.active{ display:block; }
 
-  /* ✅ Modal fits viewport + internal layout supports scrolling */
-  .ep-modal-${payload.uid}{
+  .ep-modal-${p.uid}{
     max-width:980px;
     margin:auto;
     background:#fff;
@@ -407,101 +399,49 @@
     flex-direction:column;
   }
 
-  .ep-header-${payload.uid}{
-    padding:26px 30px 18px;
-    border-bottom:1px solid var(--ep-border);
-  }
-  .ep-title-${payload.uid}{
-    font-size:20px;
-    font-weight:800;
-    margin:0;
-    color:var(--ep-navy);
-    letter-spacing:.2px;
-    line-height:1.35;
-  }
-  .ep-sub-${payload.uid}{
-    margin-top:8px;
-    font-size:15px;
-    color:var(--ep-muted);
-    line-height:1.65;
-  }
+  .ep-header-${p.uid}{ padding:26px 30px 18px; border-bottom:1px solid var(--ep-border); }
+  .ep-title-${p.uid}{ font-size:20px; font-weight:800; margin:0; color:var(--ep-navy); line-height:1.35; }
+  .ep-sub-${p.uid}{ margin-top:8px; font-size:15px; color:var(--ep-muted); line-height:1.65; }
 
-  /* ✅ Body scrolls if content taller than viewport */
-  .ep-body-${payload.uid}{
-    padding:30px;
-    overflow:auto;
-    -webkit-overflow-scrolling:touch;
+  .ep-body-${p.uid}{ padding:30px; overflow:auto; -webkit-overflow-scrolling:touch; }
+
+  .ep-section-${p.uid}{ margin-bottom:26px; }
+  .ep-section-${p.uid} h4{
+    font-size:12px; letter-spacing:.9px; text-transform:uppercase;
+    margin:0 0 12px; color:var(--ep-navy);
+  }
+  .ep-copy-${p.uid}{ line-height:1.75; color:var(--ep-muted); font-size:15px; }
+
+  .ep-grid-${p.uid}{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media(max-width:850px){ .ep-grid-${p.uid}{ grid-template-columns:1fr; } }
+
+  .ep-meta-${p.uid}{
+    background:var(--ep-light); padding:18px; border-radius:8px;
+    border:1px solid var(--ep-border); font-size:14px; line-height:1.7; color:var(--ep-text);
   }
 
-  .ep-section-${payload.uid}{ margin-bottom:26px; }
-  .ep-section-${payload.uid} h4{
-    font-size:12px;
-    letter-spacing:.9px;
-    text-transform:uppercase;
-    margin:0 0 12px;
-    color:var(--ep-navy);
-  }
-  .ep-copy-${payload.uid}{
-    line-height:1.75;
-    color:var(--ep-muted);
-    font-size:15px;
+  .ep-footer-${p.uid}{
+    padding:18px 30px; border-top:1px solid var(--ep-border);
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;
   }
 
-  .ep-grid-${payload.uid}{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px;
-  }
-  @media(max-width:850px){ .ep-grid-${payload.uid}{ grid-template-columns:1fr; } }
-
-  .ep-meta-${payload.uid}{
-    background:var(--ep-light);
-    padding:18px;
-    border-radius:8px;
-    border:1px solid var(--ep-border);
-    font-size:14px;
-    line-height:1.7;
-    color:var(--ep-text);
-  }
-
-  .ep-footer-${payload.uid}{
-    padding:18px 30px;
-    border-top:1px solid var(--ep-border);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:12px;
+  /* CTA — hardened: always white in all states */
+  .ep-cta-${p.uid}, .ep-cta-${p.uid}:link, .ep-cta-${p.uid}:visited, .ep-cta-${p.uid}:hover, .ep-cta-${p.uid}:active{
+    background:var(--ep-navy) !important;
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+    text-decoration:none !important;
+    text-shadow:none !important;
+    padding:12px 22px !important;
+    border-radius:8px !important;
+    font-weight:800 !important;
+    font-size:14px !important;
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:10px !important;
   }
 
-  /* ✅ Hardened CTA (force white text on all themes) */
-.ep-cta-${payload.uid},
-.ep-cta-${payload.uid}:link,
-.ep-cta-${payload.uid}:visited,
-.ep-cta-${payload.uid}:hover,
-.ep-cta-${payload.uid}:active{
-  background:var(--ep-navy) !important;
-
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-
-  text-decoration:none !important;
-  text-shadow:none !important;
-
-  background-clip:border-box !important;
-  -webkit-background-clip:border-box !important;
-
-  padding:12px 22px !important;
-  border-radius:8px !important;
-  font-weight:800 !important;
-  font-size:14px !important;
-
-  display:inline-flex !important;
-  align-items:center !important;
-  gap:10px !important;
-}
-
-  .ep-close-${payload.uid}{
+  .ep-close-${p.uid}{
     background:none;
     border:1px solid var(--ep-border);
     width:40px; height:40px;
@@ -511,28 +451,31 @@
     display:grid;
     place-items:center;
   }
-  .ep-close-${payload.uid}:hover{ background:var(--ep-light); }
+  .ep-close-${p.uid}:hover{ background:var(--ep-light); }
 
-  .ep-modal-${payload.uid} ul{ margin:10px 0 0; padding-left:18px; }
-  .ep-modal-${payload.uid} li{ margin:6px 0; }
-  .ep-modal-${payload.uid} a{ color:var(--ep-navy); text-decoration:underline; text-underline-offset:3px; }
+  .ep-modal-${p.uid} ul{ margin:10px 0 0; padding-left:18px; }
+  .ep-modal-${p.uid} li{ margin:6px 0; }
+  .ep-modal-${p.uid} a{ color:var(--ep-navy); text-decoration:underline; text-underline-offset:3px; }
 </style>
 
-<div class="ep-brief-center-${payload.uid}">
-  <button type="button" class="ep-brief-btn-${payload.uid}" id="epOpen-${payload.uid}">
-    ${payload.buttonLabel}
+<div class="ep-brief-center-${p.uid}">
+  <button type="button"
+          class="ep-brief-btn-${p.uid}"
+          id="epOpen-${p.uid}"
+          style="${inlineBtn}">
+    ${p.buttonLabel}
   </button>
 </div>
 
-<div class="ep-overlay-${payload.uid}" id="epOverlay-${payload.uid}" aria-hidden="true">
-  <div class="ep-modal-${payload.uid}" role="dialog" aria-modal="true" aria-labelledby="epTitle-${payload.uid}">
-    <div class="ep-header-${payload.uid}">
+<div class="ep-overlay-${p.uid}" id="epOverlay-${p.uid}" aria-hidden="true">
+  <div class="ep-modal-${p.uid}" role="dialog" aria-modal="true" aria-labelledby="epTitle-${p.uid}">
+    <div class="ep-header-${p.uid}">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
         <div>
-          <h3 class="ep-title-${payload.uid}" id="epTitle-${payload.uid}">${payload.title}</h3>
-          <div class="ep-sub-${payload.uid}">${payload.subtitle}</div>
+          <h3 class="ep-title-${p.uid}" id="epTitle-${p.uid}">${p.title}</h3>
+          <div class="ep-sub-${p.uid}">${p.subtitle}</div>
         </div>
-        <button type="button" class="ep-close-${payload.uid}" id="epClose-${payload.uid}" aria-label="Close">
+        <button type="button" class="ep-close-${p.uid}" id="epClose-${p.uid}" aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
           </svg>
@@ -540,40 +483,40 @@
       </div>
     </div>
 
-    <div class="ep-body-${payload.uid}">
-      <div class="ep-section-${payload.uid}">
+    <div class="ep-body-${p.uid}">
+      <div class="ep-section-${p.uid}">
         <h4>Programme Overview</h4>
-        <div class="ep-copy-${payload.uid}">${payload.overview}</div>
+        <div class="ep-copy-${p.uid}">${p.overview}</div>
       </div>
 
-      <div class="ep-grid-${payload.uid}">
-        <div class="ep-section-${payload.uid}">
+      <div class="ep-grid-${p.uid}">
+        <div class="ep-section-${p.uid}">
           <h4>Learning Objectives</h4>
-          <div class="ep-copy-${payload.uid}">${payload.objectives}</div>
+          <div class="ep-copy-${p.uid}">${p.objectives}</div>
         </div>
-        <div class="ep-section-${payload.uid}">
+        <div class="ep-section-${p.uid}">
           <h4>Target Participants</h4>
-          <div class="ep-copy-${payload.uid}">${payload.audience}</div>
+          <div class="ep-copy-${p.uid}">${p.audience}</div>
         </div>
       </div>
 
-      <div class="ep-section-${payload.uid}">
+      <div class="ep-section-${p.uid}">
         <h4>Core Themes</h4>
-        <div class="ep-copy-${payload.uid}">${payload.themes}</div>
+        <div class="ep-copy-${p.uid}">${p.themes}</div>
       </div>
 
-      <div class="ep-section-${payload.uid}">
+      <div class="ep-section-${p.uid}">
         <h4>Programme Format</h4>
-        <div class="ep-meta-${payload.uid}">${payload.meta}</div>
+        <div class="ep-meta-${p.uid}">${p.meta}</div>
       </div>
     </div>
 
-    <div class="ep-footer-${payload.uid}">
-      <div style="color:var(--ep-muted); font-size:14px; line-height:1.55;">
-        ${payload.footerNote}
-      </div>
-      <a class="ep-cta-${payload.uid}" href="${payload.ctaHref}">
-        ${payload.ctaText} <span aria-hidden="true">→</span>
+    <div class="ep-footer-${p.uid}">
+      <div style="color:var(--ep-muted); font-size:14px; line-height:1.55;">${p.footerNote}</div>
+      <a class="ep-cta-${p.uid}"
+         href="${p.ctaHref}"
+         style="${inlineCta}">
+        ${p.ctaText} <span aria-hidden="true">→</span>
       </a>
     </div>
   </div>
@@ -581,9 +524,9 @@
 
 <script>
 (function(){
-  var openBtn = document.getElementById("epOpen-${payload.uid}");
-  var overlay = document.getElementById("epOverlay-${payload.uid}");
-  var closeBtn = document.getElementById("epClose-${payload.uid}");
+  var openBtn = document.getElementById("epOpen-${p.uid}");
+  var overlay = document.getElementById("epOverlay-${p.uid}");
+  var closeBtn = document.getElementById("epClose-${p.uid}");
 
   function openModal(){
     overlay.classList.add("active");
@@ -599,19 +542,20 @@
   openBtn.addEventListener("click", openModal);
   closeBtn.addEventListener("click", closeModal);
   overlay.addEventListener("click", function(e){ if(e.target === overlay) closeModal(); });
-  document.addEventListener("keydown", function(e){ if(overlay.classList.contains("active") && e.key === "Escape") closeModal(); });
+  document.addEventListener("keydown", function(e){
+    if(overlay.classList.contains("active") && e.key === "Escape") closeModal();
+  });
 })();
 <\/script>`;
   }
 
   function generate(){
     const id = uid();
-    const payload = {
+    const p = {
       uid: id,
       buttonLabel: escTL(sanitise(btnLabel.value.trim() || "View Programme Brief")),
       ctaHref: escTL(sanitise(ctaHref.value.trim() || "#")),
       ctaText: escTL(sanitise(ctaText.value.trim() || "Request Information")),
-
       title: escTL(sanitise(fTitle.innerHTML.trim())),
       subtitle: escTL(sanitise(fSub.innerHTML.trim())),
       overview: escTL(sanitise(fOverview.innerHTML.trim())),
@@ -619,10 +563,10 @@
       objectives: escTL(sanitise(fObjectives.innerHTML.trim())),
       audience: escTL(sanitise(fAudience.innerHTML.trim())),
       themes: escTL(sanitise(fThemes.innerHTML.trim())),
-      footerNote: escTL(sanitise(fFooter.innerHTML.trim())),
+      footerNote: escTL(sanitise(fFooter.innerHTML.trim()))
     };
 
-    out.value = build(payload);
+    out.value = build(p);
     out.focus();
     out.select();
   }
@@ -640,7 +584,6 @@
   $("btnGenerate").addEventListener("click", generate);
   $("btnCopy").addEventListener("click", copy);
 
-  // initial output
   generate();
 })();
 </script>
